@@ -403,7 +403,10 @@
                             <h2 style="margin: 0 0 5px 0;">${emp.nome}</h2>
                             <p style="margin: 0; color: #666;">Relatório e Gestão Individualizada | CNPJ: ${emp.cnpj}</p>
                         </div>
-                        <button class="btn btn-success" onclick="window.print()">Imprimir Relatório</button>
+                        <div>
+                            <button class="btn" style="background-color: #dc3545; margin-right: 5px;" onclick="excluirEmpresa(${emp.id})">Excluir Empresa</button>
+                            <button class="btn btn-success" onclick="window.print()">Imprimir Relatório</button>
+                        </div>
                     </div>
 
                     <hr style="border:0; border-top:1px solid #dee2e6; margin:20px 0;">
@@ -554,6 +557,15 @@
             
             fecharModalNovaEmpresa();
             renderizarAplicacao();
+        }
+
+        function excluirEmpresa(idEmpresa) {
+            if (confirm("Tem certeza que deseja excluir esta empresa e todos os seus lançamentos? Esta ação não pode ser desfeita.")) {
+                dadosEmpresas = dadosEmpresas.filter(e => e.id !== idEmpresa);
+                salvarNoNavegador();
+                abaAtivaIndex = -1;
+                renderizarAplicacao();
+            }
         }
 
         function atualizarFaturamento(idEmpresa) {
