@@ -176,20 +176,25 @@
         <!-- Conteúdo principal renderizado via JS -->
     </div>
 
-    <!-- Modal para Adicionar Nova Empresa -->
+    <!-- Modal para Adicionar Nova Empresa com Consulta por CNPJ -->
     <div class="modal" id="modalEmpresa">
         <div class="modal-content">
             <h3>Adicionar Nova Empresa</h3>
+            
+            <label><b>CNPJ:</b></label>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="novoCnpj" class="form-control" placeholder="00.000.000/0001-00" style="margin-bottom:5px;">
+                <button type="button" class="btn btn-primary" style="height: 38px; margin-top: 5px;" onclick="consultarCnpjApi()">Buscar</button>
+            </div>
+            <small id="statusConsulta" style="color: #666; display: block; margin-bottom: 10px;"></small>
+
             <label>Nome Completo (Razão Social):</label>
             <input type="text" id="novoNome" class="form-control" placeholder="Ex: EMPRESA LTDA">
             
             <label>Nome Curto (Aba):</label>
             <input type="text" id="novoNomeCurto" class="form-control" placeholder="Ex: NOME CURTO">
             
-            <label>CNPJ:</label>
-            <input type="text" id="novoCnpj" class="form-control" placeholder="00.000.000/0001-00">
-            
-            <label>Segmento:</label>
+            <label>Segmento / Atividade:</label>
             <input type="text" id="novoSegmento" class="form-control" placeholder="Ex: Comércio Varejista">
 
             <div style="text-align: right; margin-top: 15px;">
@@ -255,6 +260,38 @@
 
         function salvarNoNavegador() {
             localStorage.setItem('meus_dados_empresas', JSON.stringify(dadosEmpresas));
+        }
+
+        async function consultarCnpjApi() {
+            let cnpjInput = document.getElementById('novoCnpj').value.replace(/\D/g, '');
+            let statusEl = document.getElementById('statusConsulta');
+
+            if (cnpjInput.length !== 14) {
+                alert("Digite um CNPJ válido com 14 dígitos.");
+                return;
+            }
+
+            statusEl.innerText = "Consultando dados na Receita Federal...";
+            statusEl.style.color = "#0d6efd";
+
+            try {
+                let response = await fetch(`https://api.opencnpj.org/${cnpjInput}`);
+                if (!response.ok) {
+                    throw new Error("CNPJ não encontrado");
+                }
+                let data = await response.json();
+
+                document.getElementById('novoNome').value = data.razao_social || '';
+                document.getElementById('novoNomeCurto').value = data.nome_fantasia || data.razao_social || '';
+                document.getElementById('novoSegmento').value = data.cnae_principal ? `CNAE: ${data.cnae_principal}` : (data.porte_empresa || '');
+
+                statusEl.innerText = "Dados preenchidos com sucesso!";
+                statusEl.style.color = "#198754";
+            } catch (error) {
+                console.error(error);
+                statusEl.innerText = "Não foi possível carregar automático. Preencha manualmente abaixo.";
+                statusEl.style.color = "#dc3545";
+            }
         }
 
         function renderizarAplicacao() {
@@ -474,6 +511,11 @@
         }
 
         function abrirModalNovaEmpresa() {
+            document.getElementById('novoCnpj').value = '';
+            document.getElementById('novoNome').value = '';
+            document.getElementById('novoNomeCurto').value = '';
+            document.getElementById('novoSegmento').value = '';
+            document.getElementById('statusConsulta').innerText = '';
             document.getElementById('modalEmpresa').style.display = 'flex';
         }
 
@@ -488,7 +530,7 @@
             const segmento = document.getElementById('novoSegmento').value.trim();
 
             if (!nome || !cnpj) {
-                alert("Por favor, preencha pelo menos o Nome Completo e o CNPJ da empresa.");
+                alert("Por favor, preencha o CNPJ e clique em 'Buscar' ou preencha o Nome Completo manualmente.");
                 return;
             }
 
@@ -509,12 +551,7 @@
             salvarNoNavegador();
             abaAtivaIndex = dadosEmpresas.length - 1;
             
-            document.getElementById('novoNome').value = '';
-            document.getElementById('novoNomeCurto').value = '';
-            document.getElementById('novoCnpj').value = '';
-            document.getElementById('novoSegmento').value = '';
             fecharModalNovaEmpresa();
-            
             renderizarAplicacao();
         }
 
