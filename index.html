@@ -97,6 +97,7 @@
         .btn-success { background-color: var(--accent-green); }
         .btn-primary { background-color: var(--accent-blue); }
         .btn-secondary { background-color: #6c757d; }
+        .btn-danger { background-color: #dc3545; }
         .form-control {
             width: 100%;
             padding: 8px;
@@ -340,7 +341,10 @@
                             <td>R$ ${emp.faturamento.toFixed(2)}</td>
                             <td>R$ ${totalGastos.toFixed(2)}</td>
                             <td><b>R$ ${saldoFinal.toFixed(2)}</b></td>
-                            <td><button class="btn btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="verEmpresa(${index})">Gerenciar</button></td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="verEmpresa(${index})">Gerenciar</button>
+                                <button class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="excluirEmpresa(${emp.id})">Excluir</button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -348,7 +352,7 @@
                 conteudo.innerHTML = `
                     <div class="card">
                         <h2>Visão Geral de Empresas</h2>
-                        <p>Selecione uma empresa acima ou clique em "Gerenciar" abaixo para ver os relatórios detalhados.</p>
+                        <p>Selecione uma empresa acima ou clique em "Gerenciar" / "Excluir" abaixo.</p>
                         <table>
                             <thead>
                                 <tr>
@@ -393,8 +397,9 @@
             const dataAtualFormatada = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
 
             conteudo.innerHTML = `
-                <div style="margin-bottom: 15px;">
+                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
                     <button class="btn btn-secondary" onclick="voltarDashboard()">Voltar ao Dashboard</button>
+                    <button class="btn btn-danger" onclick="excluirEmpresa(${emp.id})">Excluir Esta Empresa</button>
                 </div>
 
                 <div class="card">
@@ -404,7 +409,6 @@
                             <p style="margin: 0; color: #666;">Relatório e Gestão Individualizada | CNPJ: ${emp.cnpj}</p>
                         </div>
                         <div>
-                            <button class="btn" style="background-color: #dc3545; margin-right: 5px;" onclick="excluirEmpresa(${emp.id})">Excluir Empresa</button>
                             <button class="btn btn-success" onclick="window.print()">Imprimir Relatório</button>
                         </div>
                     </div>
@@ -606,7 +610,7 @@
         }
 
         function removerGasto(idEmpresa, idGasto) {
-            const emp = dadosEmpresas.find(e => e.id === idEmpresa);
+            const emp = dadosEmpresas.find(e =>.id === idEmpresa);
             if (emp) {
                 emp.gastosManuais = emp.gastosManuais.filter(g => g.id !== idGasto);
                 salvarNoNavegador();
