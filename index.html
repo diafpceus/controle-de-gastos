@@ -101,7 +101,7 @@
             width: 100%;
             padding: 8px;
             margin-top: 5px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border: 1px solid #ced4da;
             border-radius: 4px;
             box-sizing: border-box;
@@ -142,7 +142,7 @@
             background: white;
             padding: 25px;
             border-radius: 6px;
-            width: 450px;
+            width: 480px;
             max-width: 90%;
         }
         @media print {
@@ -168,33 +168,29 @@
         </div>
     </header>
 
-    <div class="tabs-container" id="abasContainer">
-        <!-- Abas injetadas dinamicamente -->
-    </div>
+    <div class="tabs-container" id="abasContainer"></div>
 
-    <div class="main-container" id="conteudoPrincipal">
-        <!-- Conteúdo principal renderizado via JS -->
-    </div>
+    <div class="main-container" id="conteudoPrincipal"></div>
 
     <!-- Modal para Adicionar Nova Empresa com Consulta por CNPJ -->
     <div class="modal" id="modalEmpresa">
         <div class="modal-content">
-            <h3>Adicionar Nova Empresa</h3>
+            <h3 style="margin-top:0;">Adicionar Nova Empresa</h3>
             
             <label><b>CNPJ:</b></label>
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="novoCnpj" class="form-control" placeholder="00.000.000/0001-00" style="margin-bottom:5px;">
-                <button type="button" class="btn btn-primary" style="height: 38px; margin-top: 5px;" onclick="consultarCnpjApi()">Buscar</button>
+                <input type="text" id="novoCnpj" class="form-control" placeholder="00.000.000/0001-00" style="margin-bottom:0;">
+                <button type="button" class="btn btn-primary" style="height: 38px; white-space: nowrap;" onclick="consultarCnpjApi()">Buscar CNPJ</button>
             </div>
-            <small id="statusConsulta" style="color: #666; display: block; margin-bottom: 10px;"></small>
+            <small id="statusConsulta" style="color: #666; display: block; margin-bottom: 12px; margin-top: 3px; font-size: 12px;"></small>
 
-            <label>Nome Completo (Razão Social):</label>
+            <label><b>Nome Completo (Razão Social):</b></label>
             <input type="text" id="novoNome" class="form-control" placeholder="Ex: EMPRESA LTDA">
             
-            <label>Nome Curto (Aba):</label>
+            <label><b>Nome Curto (Aba):</b></label>
             <input type="text" id="novoNomeCurto" class="form-control" placeholder="Ex: NOME CURTO">
             
-            <label>Segmento / Atividade:</label>
+            <label><b>Segmento / Atividade:</b></label>
             <input type="text" id="novoSegmento" class="form-control" placeholder="Ex: Comércio Varejista">
 
             <div style="text-align: right; margin-top: 15px;">
@@ -253,10 +249,22 @@
                 ],
                 "dataCadastro": "22/09/2026",
                 "status": "Ativo"
+            },
+            {
+                "id": 4,
+                "nome": "JTECH PRESTADORA DE SERVIÇOS LTDA",
+                "nomeCurto": "JTECH",
+                "cnpj": "12.345.678/0001-90",
+                "segmento": "Serviços de Tecnologia",
+                "faturamento": 0,
+                "despesas": 0,
+                "gastosManuais": [],
+                "dataCadastro": "25/09/2026",
+                "status": "Ativo"
             }
         ];
 
-        let abaAtivaIndex = -1; // -1 para Dashboard Principal, 0+ para empresas
+        let abaAtivaIndex = -1;
 
         function salvarNoNavegador() {
             localStorage.setItem('meus_dados_empresas', JSON.stringify(dadosEmpresas));
@@ -300,7 +308,6 @@
             
             containerAbas.innerHTML = '';
             
-            // Aba Dashboard Principal
             const btnDash = document.createElement('button');
             btnDash.className = `tab-btn ${abaAtivaIndex === -1 ? 'active' : ''}`;
             btnDash.innerText = 'Dashboard Principal';
@@ -310,7 +317,6 @@
             };
             containerAbas.appendChild(btnDash);
 
-            // Abas das Empresas
             dadosEmpresas.forEach((empresa, index) => {
                 const btn = document.createElement('button');
                 btn.className = `tab-btn ${index === abaAtivaIndex ? 'active' : ''}`;
@@ -322,7 +328,6 @@
                 containerAbas.appendChild(btn);
             });
 
-            // Se estiver no Dashboard Principal
             if (abaAtivaIndex === -1) {
                 let htmlEmpresasLista = '';
                 dadosEmpresas.forEach((emp, index) => {
@@ -364,7 +369,6 @@
                 return;
             }
 
-            // Renderiza a empresa selecionada com o layout exato solicitado
             const emp = dadosEmpresas[abaAtivaIndex];
             if (!emp) return;
 
@@ -404,7 +408,6 @@
 
                     <hr style="border:0; border-top:1px solid #dee2e6; margin:20px 0;">
                     
-                    <!-- Atualizar Faturamento -->
                     <div style="background: #f1f3f5; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
                         <h4 style="margin-top:0; color: #198754;">Atualizar Crédito / Faturamento Base</h4>
                         <label><b>Novo Valor de Crédito / Faturamento (R$)</b></label><br>
@@ -414,7 +417,6 @@
                         </div>
                     </div>
 
-                    <!-- Incluir Gasto Manual -->
                     <div style="background: #e7f1ff; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
                         <h4 style="margin-top:0; color: #0d6efd;">Incluir Gasto Manual na Empresa</h4>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -453,7 +455,6 @@
                         </tbody>
                     </table>
 
-                    <!-- RELATÓRIO DE CRÉDITOS E FORNECEDOR -->
                     <div style="border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-top: 30px; background: #fff;">
                         <h3 style="text-align: center; color: #0d6efd; margin-top: 0;">RELATÓRIO DE CRÉDITOS E FORNECEDOR</h3>
                         <p style="text-align: center; color: #666; font-size: 13px; margin-bottom: 20px;">
@@ -530,7 +531,7 @@
             const segmento = document.getElementById('novoSegmento').value.trim();
 
             if (!nome || !cnpj) {
-                alert("Por favor, preencha o CNPJ e clique em 'Buscar' ou preencha o Nome Completo manualmente.");
+                alert("Por favor, preencha o CNPJ e clique em 'Buscar CNPJ' ou preencha os dados manualmente.");
                 return;
             }
 
