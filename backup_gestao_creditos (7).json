@@ -1,0 +1,104 @@
+[
+  {
+    "id": 1,
+    "nome": "BOTIATUVA COMERCIO DE MATERIAL DE CONSTRUCAO LTDA",
+    "nomeCurto": "RESPLENDORE ACABAMENTOS",
+    "cnpj": "41.280.566/0001-00",
+    "segmento": "Materiais de Construção",
+    "faturamento": 56998.11,
+    "despesas": 0,
+    "gastosManuais": [
+      {
+        "id": 1789646176066,
+        "descricao": "BAIXA CREDITO PARA CCP",
+        "valor": 10000,
+        "periodicidade": "Mensal",
+        "data": "17/09/2026"
+      },
+      {
+        "id": 1789646217292,
+        "descricao": "CHUIMBADOR CBA 3/8X2.1/2 ",
+        "valor": 637.5,
+        "periodicidade": "Diário",
+        "data": "17/09/2026"
+      },
+      {
+        "id": 1790100759443,
+        "descricao": "equipamentos de eletronica",
+        "valor": 2824.1,
+        "periodicidade": "Diário",
+        "data": "22/09/2026"
+      },
+      {
+        "id": 1790188894641,
+        "descricao": "material pintura",
+        "valor": 227.1,
+        "periodicidade": "Diário",
+        "data": "23/09/2026"
+      },
+      {
+        "id": 1790356043496,
+        "descricao": "cadeados ",
+        "valor": 5047.4,
+        "periodicidade": "Diário",
+        "data": "25/09/2026"
+      }
+    ],
+    "dataCadastro": "10/09/2026",
+    "status": "Ativo"
+  },
+  {
+    "id": 2,
+    "nome": "SANDRIOLI AUTO SERVICO DE ALIMENTOS LTDA",
+    "nomeCurto": "SANDRIOLI AUTO SERVICO",
+    "cnpj": "08.759.767/0001-00",
+    "segmento": "Alimentação / Autoperfil",
+    "faturamento": 4749.22,
+    "despesas": 0,
+    "gastosManuais": [
+      {
+        "id": 1790083671120,
+        "descricao": "compra bobinas e agua",
+        "valor": 964.34,
+        "periodicidade": "Diário",
+        "data": "22/09/2026"
+      },
+      {
+        "id": 1790182021634,
+        "descricao": "material p/cozinha ",
+        "valor": 0,
+        "periodicidade": "Mensal",
+        "data": "23/09/2026"
+      },
+      {
+        "id": 1790182744376,
+        "descricao": "material da cozinha",
+        "valor": 88.13,
+        "periodicidade": "Diário",
+        "data": "23/09/2026"
+      }
+    ],
+    "dataCadastro": "10/09/2026",
+    "status": "Ativo"
+  },
+  {
+    "id": 3,
+    "nome": "J.L. GONCALVES & FILHO LTDA",
+    "nomeCurto": "J.L. GONCALVES",
+    "cnpj": "05858080000134",
+    "segmento": "Comércio varejista de materiais de construção não especificados anteriormente",
+    "faturamento": -2000,
+    "despesas": 0,
+    "gastosManuais": [
+      {
+        "id": 1790083759666,
+        "descricao": "material serralheria",
+        "valor": 80.43,
+        "periodicidade": "Diário",
+        "data": "22/09/2026"
+      }
+    ],
+    "dataCadastro": "22/09/2026",
+    "status": "Ativo"
+  }
+]
