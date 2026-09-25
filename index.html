@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Créditos - Controle de Saldos e Fornecedores</title>
-    <!-- Estilos e Fontes Originais -->
     <style>
         :root {
             --primary-color: #0d1b2a;
@@ -77,10 +76,12 @@
         }
         .main-container {
             padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         .card {
             background: white;
-            padding: 20px;
+            padding: 25px;
             border-radius: 6px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             margin-bottom: 20px;
@@ -95,6 +96,7 @@
         }
         .btn-success { background-color: var(--accent-green); }
         .btn-primary { background-color: var(--accent-blue); }
+        .btn-secondary { background-color: #6c757d; }
         .form-control {
             width: 100%;
             padding: 8px;
@@ -108,6 +110,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            margin-bottom: 20px;
         }
         th, td {
             padding: 10px;
@@ -118,7 +121,14 @@
         th {
             background-color: #f1f3f5;
         }
-        /* Modal Simples */
+        .badge-diario {
+            background-color: #6c757d;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -126,13 +136,21 @@
             background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
         .modal-content {
             background: white;
             padding: 25px;
             border-radius: 6px;
-            width: 400px;
+            width: 450px;
             max-width: 90%;
+        }
+        @media print {
+            header, .tabs-container, .btn, .form-control, button {
+                display: none !important;
+            }
+            body { background: white; }
+            .card { box-shadow: none; border: none; padding: 0; }
         }
     </style>
 </head>
@@ -151,18 +169,18 @@
     </header>
 
     <div class="tabs-container" id="abasContainer">
-        <!-- As abas serão injetadas aqui via JavaScript -->
+        <!-- Abas injetadas dinamicamente -->
     </div>
 
     <div class="main-container" id="conteudoPrincipal">
-        <!-- O conteúdo da empresa selecionada será renderizado aqui -->
+        <!-- Conteúdo principal renderizado via JS -->
     </div>
 
     <!-- Modal para Adicionar Nova Empresa -->
     <div class="modal" id="modalEmpresa">
         <div class="modal-content">
             <h3>Adicionar Nova Empresa</h3>
-            <label>Nome Completo:</label>
+            <label>Nome Completo (Razão Social):</label>
             <input type="text" id="novoNome" class="form-control" placeholder="Ex: EMPRESA LTDA">
             
             <label>Nome Curto (Aba):</label>
@@ -172,17 +190,16 @@
             <input type="text" id="novoCnpj" class="form-control" placeholder="00.000.000/0001-00">
             
             <label>Segmento:</label>
-            <input type="text" id="novoSegmento" class="form-control" placeholder="Ex: Comércio">
+            <input type="text" id="novoSegmento" class="form-control" placeholder="Ex: Comércio Varejista">
 
-            <div style="text-align: right; margin-top: 10px;">
-                <button class="btn" style="background: #6c757d;" onclick="fecharModalNovaEmpresa()">Cancelar</button>
+            <div style="text-align: right; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="fecharModalNovaEmpresa()">Cancelar</button>
                 <button class="btn btn-success" onclick="salvarNovaEmpresa()">Cadastrar</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Dados iniciais fornecidos por você + suporte a salvamento local
         let dadosEmpresas = JSON.parse(localStorage.getItem('meus_dados_empresas')) || [
             {
                 "id": 1,
@@ -223,7 +240,7 @@
                 "nome": "J.L. GONCALVES & FILHO LTDA",
                 "nomeCurto": "J.L. GONCALVES",
                 "cnpj": "05858080000134",
-                "segmento": "Comércio varejista de materiais de construção",
+                "segmento": "Comércio varejista de materiais de construção não especificados anteriormente",
                 "faturamento": -2000,
                 "despesas": 0,
                 "gastosManuais": [
@@ -234,7 +251,7 @@
             }
         ];
 
-        let abaAtivaIndex = 0;
+        let abaAtivaIndex = -1; // -1 para Dashboard Principal, 0+ para empresas
 
         function salvarNoNavegador() {
             localStorage.setItem('meus_dados_empresas', JSON.stringify(dadosEmpresas));
@@ -246,7 +263,17 @@
             
             containerAbas.innerHTML = '';
             
-            // Renderiza as abas superiores de navegação entre empresas
+            // Aba Dashboard Principal
+            const btnDash = document.createElement('button');
+            btnDash.className = `tab-btn ${abaAtivaIndex === -1 ? 'active' : ''}`;
+            btnDash.innerText = 'Dashboard Principal';
+            btnDash.onclick = () => {
+                abaAtivaIndex = -1;
+                renderizarAplicacao();
+            };
+            containerAbas.appendChild(btnDash);
+
+            // Abas das Empresas
             dadosEmpresas.forEach((empresa, index) => {
                 const btn = document.createElement('button');
                 btn.className = `tab-btn ${index === abaAtivaIndex ? 'active' : ''}`;
@@ -258,9 +285,54 @@
                 containerAbas.appendChild(btn);
             });
 
-            // Renderiza os detalhes da empresa ativa
+            // Se estiver no Dashboard Principal
+            if (abaAtivaIndex === -1) {
+                let htmlEmpresasLista = '';
+                dadosEmpresas.forEach((emp, index) => {
+                    let totalGastos = emp.gastosManuais.reduce((acc, g) => acc + g.valor, 0);
+                    let saldoFinal = emp.faturamento - totalGastos;
+                    htmlEmpresasLista += `
+                        <tr>
+                            <td><b>${emp.nomeCurto}</b><br><small>${emp.nome}</small></td>
+                            <td>${emp.cnpj}</td>
+                            <td>R$ ${emp.faturamento.toFixed(2)}</td>
+                            <td>R$ ${totalGastos.toFixed(2)}</td>
+                            <td><b>R$ ${saldoFinal.toFixed(2)}</b></td>
+                            <td><button class="btn btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="verEmpresa(${index})">Gerenciar</button></td>
+                        </tr>
+                    `;
+                });
+
+                conteudo.innerHTML = `
+                    <div class="card">
+                        <h2>Visão Geral de Empresas</h2>
+                        <p>Selecione uma empresa acima ou clique em "Gerenciar" abaixo para ver os relatórios detalhados.</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>CNPJ</th>
+                                    <th>Crédito / Faturamento</th>
+                                    <th>Despesas Totais</th>
+                                    <th>Saldo Disponível</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${htmlEmpresasLista}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                return;
+            }
+
+            // Renderiza a empresa selecionada com o layout exato solicitado
             const emp = dadosEmpresas[abaAtivaIndex];
             if (!emp) return;
+
+            let totalGastos = emp.gastosManuais.reduce((acc, g) => acc + g.valor, 0);
+            let saldoAtual = emp.faturamento - totalGastos;
 
             let htmlGastos = '';
             if (emp.gastosManuais && emp.gastosManuais.length > 0) {
@@ -268,70 +340,139 @@
                     htmlGastos += `<tr>
                         <td>${g.data}</td>
                         <td>${g.descricao}</td>
-                        <td>${g.periodicidade}</td>
-                        <td>R$ ${g.valor.toFixed(2)}</td>
-                        <td><button onclick="removerGasto(${emp.id}, ${g.id})" style="color:red; background:none; border:none; cursor:pointer;">Excluir</button></td>
+                        <td><span class="badge-diario">${g.periodicidade}</span></td>
+                        <td style="color: #dc3545; font-weight: bold;">R$ ${g.valor.toFixed(2)}</td>
+                        <td><button onclick="removerGasto(${emp.id}, ${g.id})" style="color:#dc3545; background:none; border:none; cursor:pointer; font-weight:bold;">[Excluir]</button></td>
                     </tr>`;
                 });
             } else {
                 htmlGastos = `<tr><td colspan="5">Nenhum gasto manual cadastrado para esta empresa.</td></tr>`;
             }
 
+            const dataAtualFormatada = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
             conteudo.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-secondary" onclick="voltarDashboard()">Voltar ao Dashboard</button>
+                </div>
+
                 <div class="card">
-                    <h2>${emp.nome}</h2>
-                    <p>Relatório e Gestão Individualizada | CNPJ: ${emp.cnpj} | Segmento: ${emp.segmento}</p>
-                    <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-                    
-                    <div style="margin-bottom: 20px;">
-                        <h4>Atualizar Crédito / Faturamento Base</h4>
-                        <label>Novo Valor de Crédito / Faturamento (R$)</label><br>
-                        <input type="number" id="inputNovoFat" class="form-control" value="${emp.faturamento}" style="max-width: 300px; display:inline-block; margin-right: 10px;">
-                        <button class="btn btn-success" onclick="atualizarFaturamento(${emp.id})">Salvar Alteração de Crédito</button>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h2 style="margin: 0 0 5px 0;">${emp.nome}</h2>
+                            <p style="margin: 0; color: #666;">Relatório e Gestão Individualizada | CNPJ: ${emp.cnpj}</p>
+                        </div>
+                        <button class="btn btn-success" onclick="window.print()">Imprimir Relatório</button>
                     </div>
 
-                    <div style="background: #fdfdfd; padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;">
-                        <h4>Incluir Gasto Manual na Empresa</h4>
+                    <hr style="border:0; border-top:1px solid #dee2e6; margin:20px 0;">
+                    
+                    <!-- Atualizar Faturamento -->
+                    <div style="background: #f1f3f5; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <h4 style="margin-top:0; color: #198754;">Atualizar Crédito / Faturamento Base</h4>
+                        <label><b>Novo Valor de Crédito / Faturamento (R$)</b></label><br>
+                        <div style="display: flex; gap: 10px; margin-top: 5px;">
+                            <input type="number" id="inputNovoFat" class="form-control" value="${emp.faturamento}" style="max-width: 300px; margin:0;">
+                            <button class="btn btn-success" onclick="atualizarFaturamento(${emp.id})">Salvar Alteração de Crédito</button>
+                        </div>
+                    </div>
+
+                    <!-- Incluir Gasto Manual -->
+                    <div style="background: #e7f1ff; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <h4 style="margin-top:0; color: #0d6efd;">Incluir Gasto Manual na Empresa</h4>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <div style="flex: 2; min-width: 200px;">
-                                <label>Descrição do Gasto</label>
+                                <label><b>Descrição do Gasto</b></label>
                                 <input type="text" id="gastoDesc" class="form-control" placeholder="Ex: Manutenção, Insumos...">
                             </div>
                             <div style="flex: 1; min-width: 150px;">
-                                <label>Periodicidade</label>
+                                <label><b>Periodicidade</b></label>
                                 <select id="gastoPeriodo" class="form-control">
                                     <option value="Diário">Diário</option>
                                     <option value="Mensal">Mensal</option>
                                 </select>
                             </div>
                             <div style="flex: 1; min-width: 150px;">
-                                <label>Valor (R$)</label>
+                                <label><b>Valor (R$)</b></label>
                                 <input type="number" id="gastoValor" class="form-control" value="0.00">
                             </div>
                         </div>
                         <button class="btn btn-primary" onclick="adicionarGasto(${emp.id})">+ Adicionar Gasto</button>
                     </div>
 
-                    <h4>Lançamentos de Gastos Manuais Registrados</h4>
+                    <h4 style="margin-top: 30px;">Lançamentos de Gastos Manuais Registrados</h4>
                     <table>
                         <thead>
                             <tr>
-                                <th>Data</th>
-                                <th>Descrição</th>
-                                <th>Periodicidade</th>
-                                <th>Valor</th>
-                                <th>Ações</th>
+                                <th>DATA</th>
+                                <th>DESCRIÇÃO</th>
+                                <th>PERIODICIDADE</th>
+                                <th>VALOR</th>
+                                <th>AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${htmlGastos}
                         </tbody>
                     </table>
+
+                    <!-- RELATÓRIO DE CRÉDITOS E FORNECEDOR -->
+                    <div style="border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-top: 30px; background: #fff;">
+                        <h3 style="text-align: center; color: #0d6efd; margin-top: 0;">RELATÓRIO DE CRÉDITOS E FORNECEDOR</h3>
+                        <p style="text-align: center; color: #666; font-size: 13px; margin-bottom: 20px;">
+                            Demonstrativo Analítico Individual<br>Emitido em: ${dataAtualFormatada}
+                        </p>
+
+                        <h4 style="border-bottom: 2px solid #0d6efd; padding-bottom: 5px;">Dados Cadastrais</h4>
+                        <table>
+                            <tr>
+                                <td style="width: 25%; font-weight: bold; background: #f8f9fa;">Razão Social:</td>
+                                <td>${emp.nome}</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">CNPJ:</td>
+                                <td>${emp.cnpj}</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Segmento:</td>
+                                <td>${emp.segmento}</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Data de Cadastro:</td>
+                                <td>${emp.dataCadastro || '10/09/2026'}</td>
+                            </tr>
+                        </table>
+
+                        <h4 style="border-bottom: 2px solid #198754; padding-bottom: 5px; margin-top: 25px;">Balanço Financeiro</h4>
+                        <table>
+                            <tr>
+                                <td style="width: 40%; font-weight: bold; background: #f8f9fa;">Crédito Total Inserido:</td>
+                                <td style="color: #198754; font-weight: bold;">R$ ${emp.faturamento.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Débitos / Despesas Totais:</td>
+                                <td style="color: #dc3545; font-weight: bold;">R$ ${totalGastos.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; background: #f8f9fa;">Saldo Atual Disponível:</td>
+                                <td style="color: ${saldoAtual >= 0 ? '#0d6efd' : '#dc3545'}; font-weight: bold; font-size: 16px;">R$ ${saldoAtual.toFixed(2)}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             `;
         }
 
-        // Funções de Controle do Modal de Nova Empresa
+        function voltarDashboard() {
+            abaAtivaIndex = -1;
+            renderizarAplicacao();
+        }
+
+        function verEmpresa(index) {
+            abaAtivaIndex = index;
+            renderizarAplicacao();
+        }
+
         function abrirModalNovaEmpresa() {
             document.getElementById('modalEmpresa').style.display = 'flex';
         }
@@ -347,7 +488,7 @@
             const segmento = document.getElementById('novoSegmento').value.trim();
 
             if (!nome || !cnpj) {
-                alert("Por favor, preencha pelo menos o Nome e o CNPJ da empresa.");
+                alert("Por favor, preencha pelo menos o Nome Completo e o CNPJ da empresa.");
                 return;
             }
 
@@ -368,7 +509,6 @@
             salvarNoNavegador();
             abaAtivaIndex = dadosEmpresas.length - 1;
             
-            // Limpa os campos e fecha o modal
             document.getElementById('novoNome').value = '';
             document.getElementById('novoNomeCurto').value = '';
             document.getElementById('novoCnpj').value = '';
@@ -448,7 +588,7 @@
                         if (Array.isArray(content)) {
                             dadosEmpresas = content;
                             salvarNoNavegador();
-                            abaAtivaIndex = 0;
+                            abaAtivaIndex = -1;
                             renderizarAplicacao();
                             alert("Backup importado com sucesso!");
                         } else {
@@ -462,7 +602,6 @@
             input.click();
         }
 
-        // Inicializa a aplicação ao carregar a página
         window.onload = renderizarAplicacao;
     </script>
 </body>
